@@ -41,7 +41,18 @@ func CreateUser(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	json.Unmarshal(reqBody, &newUser)
+	if err != nil {
+		return Errors.NewHttpError(err, http.StatusInternalServerError, "could not generate token")
+	}
+
 	id, err := Services.CreateUser(newUser)
+	if err != nil {
+		return err
+	}
+
+	newUser.Id = int(id)
+	newUser.RefreshToken, err = Services.GenerateToken(newUser, 0)
+	err = Services.UpdateUser(newUser)
 	if err != nil {
 		return err
 	}

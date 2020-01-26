@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) error {
@@ -39,7 +40,7 @@ func Login(w http.ResponseWriter, r *http.Request) error {
 		return incorrectCredentials
 	}
 
-	token, err := Services.GenerateToken(user)
+	token, err := Services.GenerateToken(user, time.Hour * 24)
 	if err != nil {
 		return Errors.NewHttpError(err, http.StatusInternalServerError, "could not generate session token")
 	}

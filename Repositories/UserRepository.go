@@ -71,7 +71,7 @@ func GetUserByEmail(email string) (Models.User, error) {
 
 func CreateUser(user Models.User) (int64, error) {
 	db := getConnection()
-	res, err := db.Exec("INSERT INTO users (email, password) VALUES (?, ?)", user.Email, user.Password)
+	res, err := db.Exec("INSERT INTO users (email, password, refreshToken) VALUES (?, ?, ?)", user.Email, user.Password, user.RefreshToken)
 	if err != nil {
 		return 0, err
 	}
@@ -79,4 +79,22 @@ func CreateUser(user Models.User) (int64, error) {
 	id, err := res.LastInsertId()
 	defer db.Close()
 	return id, err
+}
+
+func UpdateUser(user Models.User) error {
+	db := getConnection()
+	_, err := db.Exec(`
+		UPDATE users
+		SET 
+			email = ?,
+			refreshToken = ?
+		WHERE users.id = ?
+	`, user.Email, user.RefreshToken, user.Id)
+
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+	return nil
 }

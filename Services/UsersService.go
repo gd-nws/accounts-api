@@ -59,3 +59,13 @@ func GetUserByEmail(email string) (Models.User, error) {
 
 	return user, nil
 }
+
+func UpdateUser(user Models.User) error {
+	err := Repositories.UpdateUser(user)
+
+	if err != nil {
+		return Errors.NewHttpError(err, http.StatusInternalServerError, "could not update user")
+	}
+
+	return nil
+}

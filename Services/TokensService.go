@@ -7,13 +7,16 @@ import (
 	"time"
 )
 
-func GenerateToken(user Models.User) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
+func GenerateToken(user Models.User, expires time.Duration) (string, error) {
 	claims := &Models.Claims{
 		Id: user.Id,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
 		},
+	}
+
+	if expires != 0 {
+		expirationTime := time.Now().Add(expires)
+		claims.StandardClaims.ExpiresAt = expirationTime.Unix()
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
