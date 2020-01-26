@@ -33,7 +33,12 @@ func GetUser(w http.ResponseWriter, r *http.Request) (int, error) {
 		return http.StatusNotFound, errors.New("user not found")
 	}
 
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id": user.Id,
+		"email": user.Email,
+		"createdAt": user.CreatedAt,
+		"updatedAt": user.UpdatedAt,
+	})
 
 	return 200, nil
 }
