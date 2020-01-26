@@ -2,25 +2,20 @@ package Repositories
 
 import (
 	"../Models"
+	"database/sql"
 	"time"
 )
 
-func GetUserById(id int) (Models.User, error) {
-	db := getConnection()
-	selDB, err := db.Query("SELECT * FROM users WHERE id = ?", id)
-
-	if err != nil {
-		return Models.User{}, err
-	}
-
+func parseUsers(rows *sql.Rows) ([]Models.User, error) {
 	res := []Models.User{}
-	for selDB.Next() {
+	var err error
+	for rows.Next() {
 		var id int
 		var email, iv, password string
 		var createdAt, updatedAt time.Time
-		err = selDB.Scan(&id, &email, &password, &iv, &createdAt, &updatedAt)
+		err = rows.Scan(&id, &email, &password, &iv, &createdAt, &updatedAt)
 		if err != nil {
-			panic(err.Error())
+			return []Models.User{}, err
 		}
 
 		res = append(res, Models.User{
@@ -33,12 +28,45 @@ func GetUserById(id int) (Models.User, error) {
 		})
 	}
 
-	defer db.Close()
-	if len(res) < 1 {
+	return res, err
+}
+
+func GetUserById(id int) (Models.User, error) {
+	db := getConnection()
+	results, err := db.Query("SELECT * FROM users WHERE id = ?", id)
+
+	if err != nil {
+		defer db.Close()
 		return Models.User{}, err
 	}
 
-	return res[0], err
+	users, err := parseUsers(results)
+
+	defer db.Close()
+	if len(users) < 1 {
+		return Models.User{}, err
+	}
+
+	return users[0], err
+}
+
+func GetUserByEmail(email string) (Models.User, error) {
+	db := getConnection()
+	results, err := db.Query("SELECT * FROM users WHERE email = ?", email)
+
+	if err != nil {
+		defer db.Close()
+		return Models.User{}, err
+	}
+
+	users, err := parseUsers(results)
+
+	defer db.Close()
+	if len(users) < 1 {
+		return Models.User{}, err
+	}
+
+	return users[0], err
 }
 
 func CreateUser(user Models.User) (int64, error) {

@@ -2,17 +2,15 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func NewRouter() *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
-		var handler http.Handler
+		var handler rootHandler
 
 		handler = route.HandlerFunc
-		handler = Logger(handler, route.Name)
 
 		router.
 			Methods(route.Method).
