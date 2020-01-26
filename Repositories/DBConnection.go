@@ -15,9 +15,6 @@ func getConnection() (db *sql.DB) {
 	dbName := os.Getenv("DB_NAME")
 	dbPort := 3306
 
-	connectionString := dbUser + ":" + dbPass + "@" + dbHost + "/" + dbName + "?parseTime=true"
-	println(connectionString)
-
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@("+dbHost+":"+strconv.Itoa(dbPort)+")/"+dbName+"?parseTime=true")
 	if err != nil {
 		panic(err.Error())

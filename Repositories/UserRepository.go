@@ -11,20 +11,20 @@ func parseUsers(rows *sql.Rows) ([]Models.User, error) {
 	var err error
 	for rows.Next() {
 		var id int
-		var email, iv, password string
+		var email, refreshToken, password string
 		var createdAt, updatedAt time.Time
-		err = rows.Scan(&id, &email, &password, &iv, &createdAt, &updatedAt)
+		err = rows.Scan(&id, &email, &password, &refreshToken, &createdAt, &updatedAt)
 		if err != nil {
 			return []Models.User{}, err
 		}
 
 		res = append(res, Models.User{
-			Id:        id,
-			Password:  password,
-			Email:     email,
-			IV:        iv,
-			CreatedAt: createdAt,
-			UpdatedAt: updatedAt,
+			Id:           id,
+			Password:     password,
+			Email:        email,
+			RefreshToken: refreshToken,
+			CreatedAt:    createdAt,
+			UpdatedAt:    updatedAt,
 		})
 	}
 
@@ -71,7 +71,7 @@ func GetUserByEmail(email string) (Models.User, error) {
 
 func CreateUser(user Models.User) (int64, error) {
 	db := getConnection()
-	res, err := db.Exec("INSERT INTO users (email, password, iv) VALUES (?, ?, ?)", user.Email, user.Password, user.IV)
+	res, err := db.Exec("INSERT INTO users (email, password) VALUES (?, ?)", user.Email, user.Password)
 	if err != nil {
 		return 0, err
 	}

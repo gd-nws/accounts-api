@@ -2,6 +2,7 @@ package Handlers
 
 import (
 	"encoding/json"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
@@ -14,14 +15,15 @@ import (
 
 func GetUser(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	userId := mux.Vars(r)["id"]
-	id, err := strconv.Atoi(userId)
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
 
 	if err != nil {
 		return Errors.NewHttpError(nil, http.StatusUnprocessableEntity, "id must be an integer")
 	}
 
-	user, err := Services.GetUserById(id)
+	userId := context.Get(r, "id").(int)
+
+	user, err := Services.GetUserById(userId, id)
 	if err != nil {
 		return err
 	}

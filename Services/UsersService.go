@@ -29,7 +29,11 @@ func CreateUser(user Models.User) (int64, error) {
 /**
  * Get a user by id.
  */
-func GetUserById(id int) (Models.User, error) {
+func GetUserById(userId int, id int) (Models.User, error) {
+	if userId != id {
+		return Models.User{}, Errors.NewHttpError(nil, http.StatusForbidden, "cannot access another user's details")
+	}
+
 	user, err := Repositories.GetUserById(id)
 
 	if err != nil {
