@@ -34,4 +34,10 @@ var routes = Routes{
 		"/sessions/login",
 		Middleware.ErrorHandlerFunc(Handlers.Login),
 	},
+	Route{
+		"RefreshSession",
+		"POST",
+		"/sessions/refresh",
+		Middleware.ErrorHandlerFunc(Handlers.RefreshToken),
+	},
 }
