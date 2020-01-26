@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func Home(w http.ResponseWriter, r *http.Request) error {
+func Home(w http.ResponseWriter, r *http.Request) (int, error) {
 	json.NewEncoder(w).Encode("hello")
 
-	return nil
+	return http.StatusOK, nil
 }

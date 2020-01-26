@@ -1,22 +1,22 @@
 package Middleware
 
 import (
-	"../Errors"
+	"encoding/json"
 	"github.com/gorilla/context"
 	"log"
 	"net/http"
 	"time"
 )
 
-type ErrorHandlerFunc func(http.ResponseWriter, *http.Request) error
+type ErrorHandlerFunc func(http.ResponseWriter, *http.Request) (int, error)
 func (fn ErrorHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := fn(w, r)
-
+	status, err := fn(w, r)
 	start := context.Get(r, "start").(time.Time)
 
 	if err == nil {
 		log.Printf(
-			"%s\t%s\t%s",
+			"%d\t%s\t%s\t%s",
+			status,
 			r.Method,
 			r.RequestURI,
 			time.Since(start),
@@ -24,30 +24,17 @@ func (fn ErrorHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// This is where our error handling logic starts.
-	log.Printf("An error accured: %v", err) // Log the error.
-
-	clientError, ok := err.(Errors.ClientError) // Check if it is a ClientError.
-	if !ok {
-		log.Printf("Status: %d %s %v", 500, r.RequestURI, err.Error())
-		// If the error is not ClientError, assume that it is ServerError.
-		w.WriteHeader(500) // return 500 Internal Server Error.
-		return
-	}
-
-	body, err := clientError.ResponseBody() // Try to get response body of ClientError.
-	if err != nil {
-		log.Printf("An error accured: %v", err)
-		w.WriteHeader(500)
-		return
-	}
-	status, headers := clientError.ResponseHeaders() // Get http status code and headers.
-	for k, v := range headers {
-		w.Header().Set(k, v)
-	}
-
-	log.Printf("Status: %d %s %v", status, r.RequestURI, string(body)) // Log the error.
+	log.Printf(
+		"%d\t%s\t%s\t%s\t%s",
+		status,
+		r.Method,
+		r.RequestURI,
+		time.Since(start),
+		err.Error(),
+	)
 
 	w.WriteHeader(status)
-	w.Write(body)
+	json.NewEncoder(w).Encode(map[string]string {
+		"detail": err.Error(),
+	})
 }

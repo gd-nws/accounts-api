@@ -2,10 +2,9 @@ package Services
 
 import (
 	"../Crypto"
-	"../Errors"
 	"../Models"
 	"../Repositories"
-	"net/http"
+	"errors"
 )
 
 /**
@@ -14,13 +13,13 @@ import (
 func CreateUser(user Models.User) (int64, error) {
 	password, err := Crypto.HashPassword(user.Password)
 	if err != nil {
-		return 0, Errors.NewHttpError(err, http.StatusInternalServerError, "could not encrypt password")
+		return 0, errors.New("could not encrypt password")
 	}
 	user.Password = password
 
 	id, err := Repositories.CreateUser(user)
 	if err != nil {
-		return 0, Errors.NewHttpError(err, http.StatusInternalServerError, "could not store user")
+		return 0, err
 	}
 
 	return id, err
@@ -29,19 +28,12 @@ func CreateUser(user Models.User) (int64, error) {
 /**
  * Get a user by id.
  */
-func GetUserById(userId int, id int) (Models.User, error) {
-	if userId != id {
-		return Models.User{}, Errors.NewHttpError(nil, http.StatusForbidden, "cannot access another user's details")
-	}
+func GetUserById(id int) (Models.User, error) {
 
 	user, err := Repositories.GetUserById(id)
 
 	if err != nil {
-		return Models.User{}, Errors.NewHttpError(err, http.StatusInternalServerError, "could not get user")
-	}
-
-	if user.Id == 0 {
-		return  Models.User{}, Errors.NewHttpError(nil, http.StatusNotFound, "user not found")
+		return Models.User{}, err
 	}
 
 	return user, nil
@@ -49,12 +41,9 @@ func GetUserById(userId int, id int) (Models.User, error) {
 
 func GetUserByEmail(email string) (Models.User, error) {
 	user, err := Repositories.GetUserByEmail(email)
-	if err != nil {
-		return Models.User{}, Errors.NewHttpError(err, http.StatusInternalServerError, "could not get user")
-	}
 
-	if user.Id == 0 {
-		return  Models.User{}, Errors.NewHttpError(nil, http.StatusNotFound, "user not found")
+	if err != nil {
+		return Models.User{}, err
 	}
 
 	return user, nil
@@ -64,7 +53,7 @@ func UpdateUser(user Models.User) error {
 	err := Repositories.UpdateUser(user)
 
 	if err != nil {
-		return Errors.NewHttpError(err, http.StatusInternalServerError, "could not update user")
+		return err
 	}
 
 	return nil

@@ -2,21 +2,21 @@ package Handlers
 
 import (
 	"../Crypto"
-	"../Errors"
 	"../Models"
 	"../Services"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-func Login(w http.ResponseWriter, r *http.Request) error {
+func Login(w http.ResponseWriter, r *http.Request) (int, error) {
 	reqBody, err := ioutil.ReadAll(r.Body)
-	incorrectCredentials := Errors.NewHttpError(nil, http.StatusUnauthorized, "incorrect credentials")
+	incorrectCredentials := errors.New("incorrect credentials")
 
 	if err != nil {
-		return Errors.NewHttpError(err, http.StatusUnprocessableEntity, "could not process body")
+		return http.StatusUnprocessableEntity, errors.New("could not process body")
 	}
 
 	var userCredentials Models.UserCredentials
@@ -24,25 +24,20 @@ func Login(w http.ResponseWriter, r *http.Request) error {
 
 	user, err := Services.GetUserByEmail(userCredentials.Email)
 	if err != nil {
-		clientError, ok := err.(Errors.ClientError) // Check if it is a ClientError.
-		if ok {
-			status, _ := clientError.ResponseHeaders()
-			if status == 404 {
-				return incorrectCredentials
-			}
-		}
-
-		return err
+		return http.StatusInternalServerError, err
+	}
+	if user.Id == 0 {
+		return http.StatusUnauthorized, incorrectCredentials
 	}
 
 	isMatch := Crypto.ComparePasswords(user.Password, userCredentials.Password)
 	if !isMatch {
-		return incorrectCredentials
+		return  http.StatusUnauthorized, incorrectCredentials
 	}
 
 	token, err := Services.GenerateToken(user, time.Hour * 24)
 	if err != nil {
-		return Errors.NewHttpError(err, http.StatusInternalServerError, "could not generate session token")
+		return 500, err
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -50,5 +45,5 @@ func Login(w http.ResponseWriter, r *http.Request) error {
 		"sessionToken": token,
 	})
 
-	return nil
+	return 200, nil
 }
