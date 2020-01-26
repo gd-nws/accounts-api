@@ -14,7 +14,6 @@ import (
 )
 
 func GetUser(w http.ResponseWriter, r *http.Request) error {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 
 	if err != nil {
@@ -57,7 +56,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Location", "/users/" + strconv.FormatInt(id, 10))
 	w.WriteHeader(http.StatusCreated)
 

@@ -11,6 +11,7 @@ func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.Use(Middleware.Logger)
+	router.Use(Middleware.JsonResponse)
 
 	for _, route := range routes {
 		var handler Middleware.ErrorHandlerFunc
@@ -26,7 +27,11 @@ func NewRouter() *mux.Router {
 
 	s := router.PathPrefix("/users/{id}").Subrouter()
 	s.Use(Middleware.Authenticator)
-	s.Methods("GET").Path("/").Name("GetUser").Handler(Middleware.ErrorHandlerFunc(Handlers.GetUser))
+	s.
+		Methods("GET").
+		Path("/").
+		Name("GetUser").
+		Handler(Middleware.ErrorHandlerFunc(Handlers.GetUser))
 
 	return router
 }
