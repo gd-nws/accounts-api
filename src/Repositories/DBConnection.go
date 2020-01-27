@@ -7,7 +7,9 @@ import (
 	"strconv"
 )
 
-func getConnection() (db *sql.DB) {
+var db *sql.DB
+
+func GetConnection() {
 	dbDriver := "mysql"
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
@@ -15,9 +17,10 @@ func getConnection() (db *sql.DB) {
 	dbName := os.Getenv("DB_NAME")
 	dbPort := 3306
 
-	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@("+dbHost+":"+strconv.Itoa(dbPort)+")/"+dbName+"?parseTime=true")
+	var err error
+	db, err = sql.Open(dbDriver, dbUser+":"+dbPass+"@("+dbHost+":"+strconv.Itoa(dbPort)+")/"+dbName+"?parseTime=true")
 	if err != nil {
 		panic(err.Error())
 	}
-	return db
+	return
 }

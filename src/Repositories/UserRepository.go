@@ -32,17 +32,15 @@ func parseUsers(rows *sql.Rows) ([]Models.User, error) {
 }
 
 func GetUserById(id int) (Models.User, error) {
-	db := getConnection()
 	results, err := db.Query("SELECT * FROM users WHERE id = ?", id)
 
 	if err != nil {
-		defer db.Close()
 		return Models.User{}, err
 	}
+	defer results.Close()
 
 	users, err := parseUsers(results)
 
-	defer db.Close()
 	if len(users) < 1 {
 		return Models.User{}, err
 	}
@@ -51,17 +49,15 @@ func GetUserById(id int) (Models.User, error) {
 }
 
 func GetUserByEmail(email string) (Models.User, error) {
-	db := getConnection()
 	results, err := db.Query("SELECT * FROM users WHERE email = ?", email)
-
 	if err != nil {
-		defer db.Close()
 		return Models.User{}, err
 	}
 
+	defer results.Close()
+
 	users, err := parseUsers(results)
 
-	defer db.Close()
 	if len(users) < 1 {
 		return Models.User{}, err
 	}
@@ -70,19 +66,16 @@ func GetUserByEmail(email string) (Models.User, error) {
 }
 
 func CreateUser(user Models.User) (int64, error) {
-	db := getConnection()
 	res, err := db.Exec("INSERT INTO users (email, password, refreshToken) VALUES (?, ?, ?)", user.Email, user.Password, user.RefreshToken)
 	if err != nil {
 		return 0, err
 	}
 
 	id, err := res.LastInsertId()
-	defer db.Close()
 	return id, err
 }
 
 func UpdateUser(user Models.User) error {
-	db := getConnection()
 	_, err := db.Exec(`
 		UPDATE users
 		SET 
@@ -91,10 +84,5 @@ func UpdateUser(user Models.User) error {
 		WHERE users.id = ?
 	`, user.Email, user.RefreshToken, user.Id)
 
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
-	return nil
+	return err
 }
