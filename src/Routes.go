@@ -25,13 +25,13 @@ var routes = Routes{
 	Route{
 		"CreateUser",
 		"POST",
-		"/users",
+		"/users/",
 		Middleware.ErrorHandlerFunc(Handlers.CreateUser),
 	},
 	Route{
 		"AuthenticateUser",
 		"POST",
-		"/sessions/login",
+		"/sessions/",
 		Middleware.ErrorHandlerFunc(Handlers.Login),
 	},
 	Route{
@@ -39,5 +39,20 @@ var routes = Routes{
 		"POST",
 		"/sessions/refresh",
 		Middleware.ErrorHandlerFunc(Handlers.RefreshToken),
+	},
+}
+
+var authenticatedRoutes = Routes{
+	Route{
+		"GetUser",
+		"GET",
+		"/users/{id}/",
+		Middleware.ErrorHandlerFunc(Handlers.GetUser),
+	},
+	Route{
+		"GetSession",
+		"GET",
+		"/sessions/",
+		Middleware.ErrorHandlerFunc(Handlers.GetSession),
 	},
 }

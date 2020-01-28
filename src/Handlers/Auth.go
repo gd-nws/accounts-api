@@ -6,6 +6,7 @@ import (
 	"../Services"
 	"encoding/json"
 	"errors"
+	"github.com/gorilla/context"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -72,5 +73,19 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) (int, error) {
 		"sessionToken": token,
 	})
 
+	return http.StatusOK, nil
+}
+
+func GetSession(w http.ResponseWriter, r *http.Request) (int, error) {
+	id := context.Get(r, "id").(int)
+	user, err := Services.GetUserById(id)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	if user.Id == 0 {
+		return http.StatusNotFound, errors.New("user not found")
+	}
+
+	json.NewEncoder(w).Encode(Models.NewUserResponse(user))
 	return http.StatusOK, nil
 }

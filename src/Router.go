@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./Handlers"
 	"./Middleware"
 	"github.com/gorilla/mux"
 )
@@ -25,13 +24,19 @@ func NewRouter() *mux.Router {
 			Handler(handler)
 	}
 
-	s := router.PathPrefix("/users/{id}").Subrouter()
+	s := router.PathPrefix("/").Subrouter()
 	s.Use(Middleware.Authenticator)
-	s.
-		Methods("GET").
-		Path("/").
-		Name("GetUser").
-		Handler(Middleware.ErrorHandlerFunc(Handlers.GetUser))
+
+	for _, route := range authenticatedRoutes {
+		var handler Middleware.ErrorHandlerFunc
+		handler = route.HandlerFunc
+
+		s.
+			Methods(route.Method).
+			Path(route.Pattern).
+			Name(route.Name).
+			Handler(handler)
+	}
 
 	return router
 }
