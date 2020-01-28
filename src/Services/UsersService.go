@@ -10,7 +10,7 @@ import (
 /**
  * Create a user.
  */
-func CreateUser(user Models.User) (int64, error) {
+func CreateUser(user Models.User) (int, error) {
 	password, err := Crypto.HashPassword(user.Password)
 	if err != nil {
 		return 0, errors.New("could not encrypt password")

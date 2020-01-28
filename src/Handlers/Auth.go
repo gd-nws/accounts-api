@@ -37,7 +37,7 @@ func Login(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	token, err := Services.GenerateToken(user, time.Hour * 24)
 	if err != nil {
-		return 500, err
+		return http.StatusInternalServerError, err
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -45,7 +45,7 @@ func Login(w http.ResponseWriter, r *http.Request) (int, error) {
 		"sessionToken": token,
 	})
 
-	return 200, nil
+	return http.StatusOK, nil
 }
 
 func RefreshToken(w http.ResponseWriter, r *http.Request) (int, error) {
@@ -72,5 +72,5 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) (int, error) {
 		"sessionToken": token,
 	})
 
-	return 200, nil
+	return http.StatusOK, nil
 }

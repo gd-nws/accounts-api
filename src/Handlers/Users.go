@@ -1,6 +1,8 @@
 package Handlers
 
 import (
+	"../Models"
+	"../Services"
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/context"
@@ -8,9 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"../Models"
-	"../Services"
 )
 
 func GetUser(w http.ResponseWriter, r *http.Request) (int, error) {
@@ -27,20 +26,14 @@ func GetUser(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	user, err := Services.GetUserById(id)
 	if err != nil {
-		return 500, err
+		return http.StatusInternalServerError, err
 	}
 	if user.Id == 0 {
 		return http.StatusNotFound, errors.New("user not found")
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id": user.Id,
-		"email": user.Email,
-		"createdAt": user.CreatedAt,
-		"updatedAt": user.UpdatedAt,
-	})
-
-	return 200, nil
+	json.NewEncoder(w).Encode(Models.NewUserResponse(user))
+	return http.StatusOK, nil
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) (int, error) {
@@ -54,22 +47,22 @@ func CreateUser(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	id, err := Services.CreateUser(newUser)
 	if err != nil {
-		return 500, err
+		return http.StatusInternalServerError, err
 	}
 
-	newUser.Id = int(id)
+	newUser.Id = id
 	newUser.RefreshToken, err = Services.GenerateToken(newUser, 0)
 	if err != nil {
-		return 500, errors.New("could not generate token")
+		return http.StatusInternalServerError, errors.New("could not generate token")
 	}
 
 	err = Services.UpdateUser(newUser)
 	if err != nil {
-		return 500, err
+		return http.StatusInternalServerError, err
 	}
 
-	w.Header().Set("Location", "/users/" + strconv.FormatInt(id, 10))
+	w.Header().Set("Location", "/users/" + strconv.Itoa(id))
 	w.WriteHeader(http.StatusCreated)
 
-	return 201, nil
+	return http.StatusCreated, nil
 }
