@@ -9,13 +9,14 @@ WORKDIR /app
 # Copy the source from the current directory to the Working Directory inside the container
 COPY ./src /app
 
-RUN ls -la
+ENV GOPATH=/app
+ENV GOBIN=/app/bin
+
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go get
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-
 
 ######## Start a new stage from scratch #######
 FROM alpine:latest

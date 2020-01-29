@@ -17,3 +17,6 @@
 # vendor/
 
 .idea/
+*/main
+bin/
+src/src
