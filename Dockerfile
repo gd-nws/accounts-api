@@ -1,5 +1,5 @@
 # Start from the latest golang base image
-FROM golang:latest as builder
+FROM golang:alpine as builder
 
 RUN mkdir -p /app
 
