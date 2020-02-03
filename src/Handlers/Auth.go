@@ -13,26 +13,29 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) (int, error) {
-	reqBody, err := ioutil.ReadAll(r.Body)
+	var reqBody []byte
+	var err error
 	incorrectCredentials := errors.New("incorrect credentials")
+	unprocessable := errors.New("could not process body")
 
-	if err != nil {
-		return http.StatusUnprocessableEntity, errors.New("could not process body")
+	if reqBody, err = ioutil.ReadAll(r.Body); err != nil {
+		return http.StatusUnprocessableEntity, unprocessable
 	}
 
 	var userCredentials Models.UserCredentials
-	json.Unmarshal(reqBody, &userCredentials)
+	if err = json.Unmarshal(reqBody, &userCredentials); err != nil {
+		return http.StatusUnprocessableEntity, err
+	}
 
-	user, err := Services.GetUserByEmail(userCredentials.Email)
-	if err != nil {
+	var user Models.User
+	if user, err = Services.GetUserByEmail(userCredentials.Email); err != nil {
 		return http.StatusInternalServerError, err
 	}
-	if user.Id == 0 {
+	if err = checkIsValidUser(user); err != nil {
 		return http.StatusUnauthorized, incorrectCredentials
 	}
 
-	isMatch := Crypto.ComparePasswords(user.Password, userCredentials.Password)
-	if !isMatch {
+	if isMatch := Crypto.ComparePasswords(user.Password, userCredentials.Password); !isMatch {
 		return  http.StatusUnauthorized, incorrectCredentials
 	}
 
@@ -59,8 +62,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) (int, error) {
 	json.Unmarshal(reqBody, &payload)
 
 	claims := &Models.Claims{}
-	err = Services.VerifyToken(payload.RefreshToken, claims)
-	if err != nil {
+	if err = Services.VerifyToken(payload.RefreshToken, claims); err != nil {
 		return http.StatusUnauthorized, err
 	}
 
@@ -78,14 +80,24 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) (int, error) {
 
 func GetSession(w http.ResponseWriter, r *http.Request) (int, error) {
 	id := context.Get(r, "id").(int)
-	user, err := Services.GetUserById(id)
-	if err != nil {
+	var user Models.User
+	var err error
+
+	if user, err = Services.GetUserById(id); err != nil {
 		return http.StatusInternalServerError, err
 	}
-	if user.Id == 0 {
-		return http.StatusNotFound, errors.New("user not found")
+	if err = checkIsValidUser(user); err != nil {
+		return http.StatusNotFound, err
 	}
 
 	json.NewEncoder(w).Encode(Models.NewUserResponse(user))
 	return http.StatusOK, nil
+}
+
+func checkIsValidUser(user Models.User) error {
+	if user.Id != 0 {
+		return nil
+	}
+
+	return errors.New("user not found")
 }

@@ -7,14 +7,14 @@ import (
 )
 
 func parseUsers(rows *sql.Rows) ([]Models.User, error) {
-	res := []Models.User{}
+	var res []Models.User
 	var err error
+
 	for rows.Next() {
 		var id int
 		var email, refreshToken, password string
 		var createdAt, updatedAt time.Time
-		err = rows.Scan(&id, &email, &password, &refreshToken, &createdAt, &updatedAt)
-		if err != nil {
+		if err = rows.Scan(&id, &email, &password, &refreshToken, &createdAt, &updatedAt); err != nil {
 			return []Models.User{}, err
 		}
 
@@ -31,48 +31,58 @@ func parseUsers(rows *sql.Rows) ([]Models.User, error) {
 	return res, err
 }
 
-func GetUserById(id int) (Models.User, error) {
-	results, err := db.Query(`
+func GetUserById(id int) (*Models.User, error) {
+	const query = `
 		SELECT * 
 		FROM users 
 		WHERE 
 			id = $1
-	`, id)
+	`
 
-	if err != nil {
-		return Models.User{}, err
+	var results *sql.Rows
+	var err error
+	if results, err = db.Query(query, id); err != nil {
+		return &Models.User{}, err
 	}
 	defer results.Close()
 
-	users, err := parseUsers(results)
-
-	if len(users) < 1 {
-		return Models.User{}, err
+	var users []Models.User
+	if users, err = parseUsers(results); err != nil {
+		return &Models.User{}, err
 	}
 
-	return users[0], err
+	if len(users) < 1 {
+		return &Models.User{}, nil
+	}
+
+	return &users[0], nil
 }
 
-func GetUserByEmail(email string) (Models.User, error) {
-	results, err := db.Query(`
+func GetUserByEmail(email string) (*Models.User, error) {
+	const query = `
 		SELECT * 
 		FROM users 
 		WHERE 
 			email = $1
-	`, email)
-	if err != nil {
-		return Models.User{}, err
+	`
+	var results *sql.Rows
+	var err error
+	if results, err = db.Query(query, email); err != nil {
+		return &Models.User{}, err
 	}
 
 	defer results.Close()
 
-	users, err := parseUsers(results)
-
-	if len(users) < 1 {
-		return Models.User{}, err
+	var users []Models.User
+	if users, err = parseUsers(results); err != nil {
+		return &Models.User{}, err
 	}
 
-	return users[0], err
+	if len(users) < 1 {
+		return &Models.User{}, nil
+	}
+
+	return &users[0], nil
 }
 
 func CreateUser(user Models.User) (int, error) {

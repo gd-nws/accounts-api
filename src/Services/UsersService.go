@@ -1,10 +1,13 @@
 package Services
 
 import (
+	"../Cache"
 	"../Crypto"
 	"../Models"
 	"../Repositories"
 	"errors"
+	"github.com/patrickmn/go-cache"
+	"strconv"
 )
 
 /**
@@ -29,14 +32,19 @@ func CreateUser(user Models.User) (int, error) {
  * Get a user by id.
  */
 func GetUserById(id int) (Models.User, error) {
+	var user *Models.User
+	var err error
 
-	user, err := Repositories.GetUserById(id)
-
-	if err != nil {
-		return Models.User{}, err
+	if x, found := Cache.MemoryCache.Get(strconv.Itoa(id)); found {
+		user = x.(*Models.User)
+	} else {
+		if user, err = Repositories.GetUserById(id); err != nil {
+			return *user, err
+		}
+		Cache.MemoryCache.Set(strconv.Itoa(user.Id), user, cache.DefaultExpiration)
 	}
 
-	return user, nil
+	return *user, nil
 }
 
 func GetUserByEmail(email string) (Models.User, error) {
@@ -46,7 +54,7 @@ func GetUserByEmail(email string) (Models.User, error) {
 		return Models.User{}, err
 	}
 
-	return user, nil
+	return *user, nil
 }
 
 func UpdateUser(user Models.User) error {
@@ -54,6 +62,15 @@ func UpdateUser(user Models.User) error {
 
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+
+func CheckUserCanEdit(userId int, user Models.User) error {
+	if userId != user.Id {
+		return errors.New("cannot access another user's account")
 	}
 
 	return nil

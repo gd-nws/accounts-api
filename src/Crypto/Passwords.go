@@ -6,13 +6,11 @@ import (
 
 func HashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-
 	return string(hash), err
 }
 
 func ComparePasswords(hashedPwd string, plainPwd string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPwd), []byte(plainPwd))
-	if err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPwd), []byte(plainPwd)); err != nil {
 		return false
 	}
 
